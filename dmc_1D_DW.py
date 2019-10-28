@@ -8,13 +8,11 @@ m = (1/2)*(1.00784*au)
 dtau = 5.0
 alpha = 1/(2*dtau)
 hartree_conv = 219474.6  # hartree to cm^-1 (== 1/ wn)
-TimeSteps = 1500
+timeSteps = 1500
 descendant_time = 50
 initial_walkers = 1000
 angst = 0.529177
 coordinates = np.zeros(initial_walkers)
-
-#(num walkers, num atoms, 3)
 Vref_array = []
 
 
@@ -41,12 +39,12 @@ def get_potential(cds_array):
 def vref_stuff(vAr):
     VR = np.average(vAr) - alpha*((len(vAr) - initial_walkers) / initial_walkers)
     return VR
-
-
+#---------------------------------
+#ideas for vectorization
 # np.where(vAr < VR,  )
 #     if np.logical_and(vAr[i] < VR, np.random.random() < Pb) = True:
 #         birth_list.append(i)
-
+#---------------------------------
 
 def birth_or_death(vAr, VR, cds, arb_who_from):
     birth_list = []
@@ -74,25 +72,26 @@ def birth_or_death(vAr, VR, cds, arb_who_from):
     return vAr, cds, birth_list, death_list, arb_who_from
 
 
+""" call """
+
+
 coords_1450 = []
 who_from = np.arange(len(coordinates))
 
-"""call"""
-
-for i in range(TimeSteps + 1):
+for i in range(timeSteps + 1):
     coordinates = random_displacement(coordinates)
     V_array = get_potential(coordinates)
     if i == 0:
         Vref = vref_stuff(V_array)
 
-    if i == TimeSteps - descendant_time:
+    if i == timeSteps - descendant_time:
         coords_1450 = np.copy(coordinates)
         weights = np.zeros(len(coords_1450))
         who_from = np.arange(len(coords_1450))  # who_from = np.array([x for x in range(len(coordinates))])
 
     V_array, coordinates, birth_list, death_list, who_from = birth_or_death(V_array, Vref, coordinates, who_from)
 
-    if i == TimeSteps:
+    if i == timeSteps:
         individuals, occurrence = np.unique(who_from, return_counts=True)
         weights[individuals] = occurrence
 
@@ -102,7 +101,9 @@ for i in range(TimeSteps + 1):
     print(len(coordinates))  # tracking walker variation
     print(i)  # tracking progress
 
+
 """ get zpe """
+
 
 Vref_array = Vref_array[500:]  # allow for convergence
 zpe = np.average(Vref_array)
@@ -139,6 +140,7 @@ plt.plot(bin_centers, psi_sqrd_weighted, label="psi^2 weighted")
 plt.plot(bin_centers, psi, label="psi")
 plt.legend()
 plt.show()
+
 
 
 
