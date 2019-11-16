@@ -1,21 +1,34 @@
 import numpy as np
 import numpy.linalg as linalg
+import matplotlib as mpl
+mpl.use('Agg')
 import matplotlib.pyplot as plt
 import subprocess as sub
+import sys
+import os
+
+if not os.path.exists("h2o_analysis_data"):
+    os.makedirs("h2o_analysis_data")
 
 wn = 4.55634e-6  # cm^-1 to amu
-# omega = 4000*wn
 au = 1822.89  # amu to au
 m_hyd = (1.00784*au)
 m_ox = (15.999*au)
 dtau = 5.0
 alpha = 1/(2*dtau)
 hartree_conv = 219474.6  # hartree to cm^-1 (== 1/wn)
-timeSteps = 2000
-equilibrium_time = 500  # flexible, used for calculating zpe
-descendant_time = 100
+
+term_walks = sys.argv[1]
+term_run = sys.argv[2]
+
+descendant_time = 50
+timeSteps = 10000
+
+convergence_time = .25
+equilibrium_time = int(timeSteps*convergence_time)  # flexible, used for calculating zpe
 number_of_wfns = 10  # generally want: descendant_time * number_of_wfns = 0.5 timesteps, flexible
-initial_walkers = 100
+initial_walkers = term_walks
+
 angst = 0.529177
 num_atoms = 3  # H2O
 xyz = 3
@@ -59,7 +72,13 @@ def random_displacement(cds_array):  # arbitrary argument here,
 
 
 def get_potential(cds_array):
+    """
 
+    :param cds_array:
+    :type cds_array: np.ndarray
+    :return: cds_array
+    :rtype: np.ndarray
+    """
     the_length = len(cds_array)
     cds_array = np.reshape(cds_array, (len(cds_array)*num_atoms, 3))
     np.savetxt("PES_water/hoh_coord.dat", cds_array, header=str(the_length), comments="")
@@ -92,21 +111,27 @@ def birth_or_death(vAr, VR, cds, arb_who_from):
     cds = np.concatenate((cds, cds[birth_list]), axis=0)  # axis?
     cds = np.delete(cds, death_list, axis=0)
     vAr = np.concatenate((vAr, vAr[birth_list]))
-    vAr = np.delete(vAr, death_list,axis=0)
+    vAr = np.delete(vAr, death_list, axis=0)
     arb_who_from = np.concatenate((arb_who_from, arb_who_from[birth_list]))
     arb_who_from = np.delete(arb_who_from, death_list)
 
     return vAr, cds, birth_list, death_list, arb_who_from
 
 
-""" call """
+""" call variables  """
 
 coords_to_save = []
 who_from = np.arange(len(coordinates))
 coordinates = equilibrium_cds(coordinates)
-weights_spots = np.arange((timeSteps - descendant_time*number_of_wfns) + descendant_time, timeSteps + descendant_time, descendant_time)
-cds_spots = np.arange(timeSteps - descendant_time*number_of_wfns, timeSteps, descendant_time)
+# y = np.arange(1000 + 50, 10000 + 51, 1000)
+weights_spots2 = np.arange((timeSteps / number_of_wfns), timeSteps + 1, timeSteps/number_of_wfns)
+# x = np.arange(1000, 10000, 1000)
+cds_spots2 = np.arange((timeSteps / number_of_wfns) - descendant_time, timeSteps, timeSteps/number_of_wfns)
+wfn_ct = 1
+wt_ct = 1
 
+
+""" call """
 
 for i in range(timeSteps + 1):
     coordinates = random_displacement(coordinates)
@@ -114,40 +139,31 @@ for i in range(timeSteps + 1):
     if i == 0:
         Vref = vref_stuff(V_array)
 
-    if i in cds_spots:
-        wfn_numb = (timeSteps - i) / descendant_time
+    if i in cds_spots2:
         coords_to_save = (np.copy(coordinates)) * angst
-        np.save("wavefunctions_data/wfn" + str(wfn_numb), coordinates*angst)
+        np.save("h2o_analysis_data/" + str(term_walks) + "_" + str(term_run) + "_" + "wfn" + str(wfn_ct) + ".npy",
+                coords_to_save * angst)
         weights = np.zeros(len(coords_to_save))
         who_from = np.arange(len(coords_to_save))
-
+        wfn_ct += 1
     V_array, coordinates, birth_list, death_list, who_from = birth_or_death(V_array, Vref, coordinates, who_from)
 
-    if i in weights_spots:
-        weights_numb = (timeSteps - i) / descendant_time
+    if i in weights_spots2:
         individuals, occurrence = np.unique(who_from, return_counts=True)
         weights[individuals] = occurrence
-        np.save("wavefunctions_data/weights" + str(weights_numb), weights)
+        np.save("h2o_analysis_data/" + str(term_walks) + "_" + str(term_run) + "_" + "weights" + str(wt_ct),
+                weights)
+        wt_ct += 1
 
     Vref = vref_stuff(V_array)
     Vref_array.append(Vref)
 
+    """ save vref """
+
+    if i == timeSteps:
+        np.save("h2o_analysis_data/" + str(term_walks) + "_" + str(term_run) + "_varray", Vref_array)
+
     print(len(coordinates))  # tracking walker variation
     print(i)  # tracking progress
+print("gg")
 
-
-""" get zpe """
-
-Vref_array = Vref_array[equilibrium_time:]  # allow for convergence
-zpe = np.average(Vref_array)
-print("zpe = " + str(zpe * hartree_conv))
-
-
-""" plot Vref convergence """
-
-plt.plot(np.array(Vref_array) * hartree_conv)
-plt.title("$V_{ref}$ convergence from " + str(equilibrium_time) + " to " + str(timeSteps))
-plt.xlabel("imaginary time")
-plt.ylabel("$V_{ref}$")
-plt.grid()
-plt.show()
