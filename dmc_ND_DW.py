@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 if not os.path.exists("h2o_analysis_data"):
     os.makedirs("h2o_analysis_data")
 
-#  -------------------------------------------------
+#  -------------------------------------------------------------
 parser = argparse.ArgumentParser()
 parser.add_argument(
     "--initial-walkers",
@@ -42,8 +42,7 @@ parser.add_argument(
     dest='descendant_time'
 )
 param = parser.parse_args()
-#  --------------------------------------------------
-
+#  -------------------------------------------------------------
 
 wn = 4.55634e-6  # cm^-1 to amu
 au = 1822.89  # amu to au
@@ -61,9 +60,9 @@ angst = 0.529177
 num_atoms = 3  # H2O
 xyz = 3
 Vref_array = []
-# coordinates = np.zeros((initial_walkers, num_atoms, xyz))  # 1000 pairs of 3x(xyz)
 coordinates = np.zeros((param.init_walks, num_atoms, xyz))  # 1000 pairs of 3x(xyz)
 
+#  -------------------------------------------------------------
 
 def equilibrium_cds(cds):
     """
@@ -119,9 +118,9 @@ def get_potential(cds_array):
 def vref_stuff(vAr):
     """
     :param vAr:
-    :type vAr:
-    :return:
-    :rtype:
+    :type vAr: np.ndarray
+    :return: VR
+    :rtype: VR: np.ndarray
     """
     VR = np.average(vAr) - alpha*((len(vAr) - param.init_walks) / param.init_walks)
 
@@ -134,13 +133,13 @@ def birth_or_death(vAr, VR, cds, arb_who_from):
     :param vAr:
     :type vAr: np.ndarray
     :param VR:
-    :type VR:
+    :type VR: np.ndarray
     :param cds:
-    :type cds:
+    :type cds: np.ndarray
     :param arb_who_from:
-    :type arb_who_from:
-    :return:
-    :rtype:
+    :type arb_who_from: np.ndarray
+    :return: vAr, cds, birth_list, death_list, arb_who_from
+    :rtype: np.ndarray(s)
     """
     birth_list = []
     death_list = []
