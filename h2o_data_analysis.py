@@ -1,6 +1,9 @@
 import numpy as np
+from matplotlib import rc
 import matplotlib.pyplot as plt
 # plt.rc('text', usetex=True)
+# rc('font', **{'family': 'serif', 'serif': ['Computer Modern']})
+# rc('text', usetex=True)
 import numpy.linalg as linalg
 import sys
 import glob
@@ -15,7 +18,7 @@ int_run_walkers = list(map(int, run_walkers))
 
 plot_zpes = []
 plot_stds = []
-for walks in run_walkers:
+for walks in int_run_walkers:
     zpe_list = []
     for dmc_trial in range(1, 6):
         v_array_imported = np.load("h2o_analysis_data/" + str(walks) + "_" + str(dmc_trial) + "_varray.npy")
@@ -30,11 +33,11 @@ for walks in run_walkers:
 plt.errorbar(int_run_walkers, plot_zpes, yerr=plot_stds, solid_capstyle='projecting', capsize=5)
 plt.plot([1000, 5000], [4638.39, 4638.39])
 plt.ylim([4620, 4650])
-# plt.xlim([1000, 5000])
-# plt.title("$ $")
+plt.xlim([1000, 5000])
+plt.title(r'$\alpha > \beta$')
 # plt.xlabel("$r_{OH_1} (\\AA)$")
-plt.ylabel('$\cm^{-1}$')
-plt.grid()
+# plt.ylabel('$\cm^{-1}$')
+# plt.grid()
 plt.show()
 
 """ get zpe """
@@ -131,33 +134,35 @@ def overlayplots(walk_numbs_list):
 combine overlay plots into one plot for each walker amount (1000, 3000, 5000) with 5 psi^2 on each, only using r_OH1
 """
 
-for num_walkers in run_walkers:
-    for dmc_trial in range(1, 6):
-        w = []
-        c = []
-        for harvest_n in range(1, 11):
-            loaded_wts = np.load(
-                "h2o_analysis_data/" + str(num_walkers) + "_" + str(dmc_trial) + "_weights" + str(harvest_n) + ".npy"
-            )
-            w.extend(loaded_wts)
-            loaded_cds = np.load(
-                "h2o_analysis_data/" + str(num_walkers) + "_" + str(dmc_trial) + "_wfn" + str(harvest_n) + ".npy"
-            )
-            c.extend(loaded_cds)
 
-        w1_combo = np.array(w) / angst
-        c1_combo = np.array(c) / angst
+def combine_wfns_to_one(walk_numbs_list):
+    for num_walkers in walk_numbs_list:
+        for dmc_trial in range(1, 6):
+            w = []
+            c = []
+            for harvest_n in range(1, 11):
+                loaded_wts = np.load(
+                    "h2o_analysis_data/" + str(num_walkers) + "_" + str(dmc_trial) + "_weights" + str(harvest_n) + ".npy"
+                )
+                w.extend(loaded_wts)
+                loaded_cds = np.load(
+                    "h2o_analysis_data/" + str(num_walkers) + "_" + str(dmc_trial) + "_wfn" + str(harvest_n) + ".npy"
+                )
+                c.extend(loaded_cds)
 
-        """ project psi^2 onto OH1 bond """
-        r_oh1z = linalg.norm(c1_combo[:, 1] - c1_combo[:, 2], axis=1)
-        psi_sqrd1_combo, bins_hist_combo = np.histogram(r_oh1z, bins=25, range=(.5, 1.5), weights=w1_combo, density=True)
-        bin_centers_combo = 0.5 * (bins_hist_combo[:-1] + bins_hist_combo[1:])
-        plt.plot(bin_centers_combo, psi_sqrd1_combo)
-        plt.title("$\\combining wfns for psi^2 at " + str(num_walkers) + " walkers$")
-        plt.xlabel("$r_{OH_1} (\\AA)$")
-        plt.ylabel("$\\psi^2$")
-        plt.grid()
-    plt.savefig(fname=str(num_walkers) + "_5x_wfn1plot")
-    plt.close()
+            w1_combo = np.array(w) / angst
+            c1_combo = np.array(c) / angst
 
+            """ project psi^2 onto OH1 bond """
+            r_oh1z = linalg.norm(c1_combo[:, 1] - c1_combo[:, 2], axis=1)
+            psi_sqrd1_combo, bins_hist_combo = np.histogram(r_oh1z, bins=25, range=(.5, 1.5), weights=w1_combo, density=True)
+            bin_centers_combo = 0.5 * (bins_hist_combo[:-1] + bins_hist_combo[1:])
+            plt.plot(bin_centers_combo, psi_sqrd1_combo)
+            plt.title("$\\combining wfns for psi^2 at " + str(num_walkers) + " walkers$")
+            plt.xlabel("$r_{OH_1} (\\AA)$")
+            plt.ylabel("$\\psi^2$")
+            plt.grid()
+        plt.savefig(fname=str(num_walkers) + "_5x_wfn1plot")
+        plt.close()
 
+# combine_wfns_to_one(int_run_walkers)
