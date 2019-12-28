@@ -9,11 +9,15 @@
 \maketitle
 
 \section{Introduction to Diffusion Monte Carlo}
-Diffusion Monte Carlo (DMC) is a numerical method for solving the time independent Schrodinger equation. At its core, DMC is computational algorithm. The algorithm approximates the zero point energy (ZPE) of a system as well as produces an accurate representation of $\Psi$.$^\text{[1]}$
+Diffusion Monte Carlo (DMC) is a numerical method for solving the time independent Schrodinger equation. 
+At its core, DMC is computational algorithm. 
+The algorithm approximates the zero point energy (ZPE) of a system as well as produces an accurate representation of $\Psi$.$^\text{[1]}$
 \subsection{Applications of DMC}
-DMC is a useful approach for studying the vibrations of molecules that exhibit anharmonic behavior. Molecules with lots of anharmonicity are poor candidates for other methods.  
+DMC is a useful approach for studying the vibrations of molecules that exhibit anharmonic behavior. 
+Molecules with lots of anharmonicity are poor candidates for other methods.  
 
-Applications include investigating the effect of adding zero point energy to a system and observing what happens to the wavefunction when the system can access different parts of the potential. This can give insight into the structural configuration of the system. 
+Applications include investigating the effect of adding zero point energy to a system and observing what happens to the wavefunction when the system can access different parts of the potential. 
+This can give insight into the structural configuration of the system. 
 
 Furthermore, while the style of DMC detailed in this document limits results to the ground state vibrational energy, further more complicated applications include approximating higher order energies.$^\text{[2]}$
 
@@ -139,30 +143,32 @@ This is done for simplicity where only one walker $i$ is being worked with.
 e^{-\hat{T}\Delta\tau}f(r-r_{i}(\tau))
 \end{equation}
 This operation involves a Fourier transform from position to momentum space and back in order to solve. 
-The details of this are beyond the scope of this paper, however the result is a Gaussian function of width $\sqrt{\frac{\Delta\tau}{m}}$. The operation of the potential energy follows suit:
+The details of this are beyond the scope of this paper, however the result is a Gaussian function of width $\sqrt{\frac{\Delta\tau}{m}}$. 
+The operation of the potential energy follows suit:
 
 \begin{equation} \label{eqn}
 e^{-(\hat{V}{((r_{i}(\tau+\Delta\tau))}-V_{ref})\Delta\tau}f(r-r_{i}(\tau+\Delta\tau))
 \end{equation}
 
-here, the walker $i$ located at $r_{i}$ at time $\tau+\Delta\tau$ has its potential energy evaluated at that point. Furthermore, the reason $\tau+\Delta\tau$ is used here rather than $\tau$ is because of the order we operated the two portions of the time evolution operator (16). The Gaussian made in (17) at time $\tau$ is not used until time $\tau+\Delta\tau$. 
+here, the walker $i$ located at $r_{i}$ at time $\tau+\Delta\tau$ has its potential energy evaluated at that point. 
+Furthermore, the reason $\tau+\Delta\tau$ is used here rather than $\tau$ is because of the order we operated the two portions of the time evolution operator (16). 
+The Gaussian made in (17) at time $\tau$ is not used until time $\tau+\Delta\tau$. 
 
 Much of this may be difficult to understand without a better background on the actual algorithm which is being used which will now be explained.
 
 \section{Algorithm}
-The first thing to understand is what exactly a "walker" is. Mathematically, the walkers are localized functions. Algorithmically, a walker is a set of coordinates that correspond to the molecule the DMC simulation is being run on. For example, if DMC is being ran on H$_{2}$O, one walker would be composed of two Hydrogen coordinates and one Oxygen coordinate for a total of three coordinates.
+The first thing to understand is what exactly a "walker" is. 
+Mathematically, the walkers are localized functions. 
+Algorithmically, a walker is a set of coordinates that correspond to the molecule the DMC simulation is being run on. For example, if DMC is being ran on H$_{2}$O, one walker would be composed of two Hydrogen coordinates and one Oxygen coordinate for a total of three coordinates.
 
 Prior to starting the simulation, an amount of initial walkers are chosen and each walker is given the equilibrium coordinates of the molecule of interest. 
 \subsection{Each timestep}
-Displace each walker by amount drawn randomly from Gaussian of width $\sqrt{\frac{\Delta\tau}{m}}$. Calculate $V_{ref}$ from prior timestep using equation 4. Evaluate each walker at the potential $V(r_{i})$. Now using each walkers evaluated potential, it is compared to the $V_{ref}$. Each walker is then assigned a probability of either replicating or deleting itself based on criteria listed below.
+Displace each walker by amount drawn randomly from Gaussian of width $\sqrt{\frac{\Delta\tau}{m}}$. 
+Calculate $V_{ref}$ from prior timestep using equation 4. 
+Evaluate each walker at the potential $V(r_{i})$. 
+Now using each walkers evaluated potential, it is compared to the $V_{ref}$. 
+Each walker is then assigned a probability of either replicating or deleting itself based on criteria listed below.
 
-
-%\begin{equation}
-%  P_d=\begin{cases}
-%    $1-e^{(-(V(r_{i})-V_{ref})\Delta\tau)}$, & \text{if $V(r_{i})>V_{ref}$}.\\
-%    0, & \text{if $V(r_{i})<V_{ref}$}.
-%  \end{cases}
-%\end{equation}
 
 \begin{equation}
 P_b = \begin{cases}
@@ -179,18 +185,21 @@ P_d = \begin{cases}
 \end{equation}
 
 
-
-
-Once probabilities of birth or death have been assigned to a walker, a uniformly random number $X$ is drawn on the interval $[0, 1]$. This number is compared to the walkers $P_{b}$ or $P_{d}$. If $X$ is less than $P_{b}$ or $P_{d}$, the walker is birthed or killed respectively. This replication and deletion process leads to $V_{ref}$ converging to $E_{0}$. 
+Once probabilities of birth or death have been assigned to a walker, a uniformly random number $X$ is drawn on the interval $[0, 1]$. 
+This number is compared to the walkers $P_{b}$ or $P_{d}$. If $X$ is less than $P_{b}$ or $P_{d}$, the walker is birthed or killed respectively. This replication and deletion process leads to $V_{ref}$ converging to $E_{0}$. 
 
 \subsection{Extracting ZPE results}
-As detailed in section 2.4, for long enough $\tau$, $V_{ref}$ converges to $E_{0}$. Thus, once the DMC simulation has ran to completion, taking the average off each $V_{ref}$ collected at each timestep is approximately equal to the ZPE. However due to the nature of convergence, the first $10-20\%$ of the simulations $V_{ref}$ values are not used in the average calculation to account for the time the ensemble took to converge. 
+As detailed in section 2.4, for long enough $\tau$, $V_{ref}$ converges to $E_{0}$. Thus, once the DMC simulation has ran to completion, taking the average of each $V_{ref}$ collected at each timestep is approximately equal to the ZPE. 
+However due to the nature of convergence, the first $10-20\%$ of the simulations $V_{ref}$ values are not used in the average calculation to account for the time the ensemble took to converge. 
 
 
 \subsection{Extracting $\Psi^2$ using descendant weighting}
-Since we are representing $\Psi$ as an ensemble of localized functions(walkers), then the walker coordinates at the end of the simulation is equal to the wavefunction $\Psi$. Knowing that $\Psi^2$ is a probability density, then by assigning weights to each walker, a probability density should be able to be plotted. 
+Since we are representing $\Psi$ as an ensemble of localized functions(walkers), then the walker coordinates at the end of the simulation is equal to the wavefunction $\Psi$. 
+Given the fact that $\Psi^2$ is a probability density, by assigning weights to each walker, a probability density is able able to be plotted. 
 
-Returning to the replication and deletion portion of the algorithm, each time a walker is replicated it gets a weight of $+1$ and each time it is deleted it gets a weight of $0$. Collecting this data allows for $\Psi^2$ to be projected onto the bond length by histogramming along the bond length and using the walkers weights as their level of contribution to each histogram bin. The result is a probability density representing $\Psi^2$.
+Returning to the replication and deletion portion of the algorithm, each time a walker is replicated it gets a weight of $+1$ and each time it is deleted it gets a weight of $0$. 
+Collecting this data allows for $\Psi^2$ to be projected onto the bond length by histogramming along the bond length and using the walkers weights as their level of contribution to each histogram bin. 
+The result is a probability density representing $\Psi^2$.
 
 \section{References}
 [1] James B. Anderson, Quantum chemistry by random walk. J. Chem. Phys. 65, 4121 (1976); https://doi.org/10.1063/1.432868\\
