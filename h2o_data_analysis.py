@@ -15,38 +15,34 @@ run_walkers = ["1000", "3000", "5000"]
 int_run_walkers = list(map(int, run_walkers))
 
 """ energy analysis """
+def zpe_convergence_plotting():
+    plot_zpes = []
+    plot_stds = []
+    for walks in int_run_walkers:
+        plt.rcParams.update({'font.size': 15})
+        zpe_list = []
+        for dmc_trial in range(1, 6):
+            v_array_imported = np.load("h2o_analysis_data/" + str(walks) + "_" + str(dmc_trial) + "_varray.npy")
+            v_array_imported = v_array_imported[1000:]  # allow for convergence
+            zpe = (np.average(v_array_imported)) * hartree_conv
+            zpe_list.append(zpe)
 
-plot_zpes = []
-plot_stds = []
-for walks in int_run_walkers:
-    zpe_list = []
-    for dmc_trial in range(1, 6):
-        v_array_imported = np.load("h2o_analysis_data/" + str(walks) + "_" + str(dmc_trial) + "_varray.npy")
-        v_array_imported = v_array_imported[1000:]  # allow for convergence
-        zpe = (np.average(v_array_imported)) * hartree_conv
-        zpe_list.append(zpe)
+        run_std = np.std(zpe_list)
+        zpe_list = np.average(zpe_list)
+        plot_zpes.append(zpe_list)
+        plot_stds.append(run_std)
+    plt.errorbar(int_run_walkers, plot_zpes, yerr=plot_stds, solid_capstyle='projecting', capsize=5)
+    plt.plot([1000, 5000], [4638.39, 4638.39], 'r--')
+    plt.ylim([4620, 4650])
+    plt.xlim([925, 5075])
+    plt.title('ZPE convergence with walker variation')
+    plt.xlabel("$N_{w}$")
+    plt.ylabel('$cm^{-1}$')
+    plt.grid()
+    plt.savefig(fname="zpe_convergence", dpi=500, bbox_inches="tight")
+    return None
 
-    run_std = np.std(zpe_list)
-    zpe_list = np.average(zpe_list)
-    plot_zpes.append(zpe_list)
-    plot_stds.append(run_std)
-plt.errorbar(int_run_walkers, plot_zpes, yerr=plot_stds, solid_capstyle='projecting', capsize=5)
-plt.plot([1000, 5000], [4638.39, 4638.39])
-plt.ylim([4620, 4650])
-plt.xlim([1000, 5000])
-plt.title(r'$\alpha > \beta$')
-# plt.xlabel("$r_{OH_1} (\\AA)$")
-# plt.ylabel('$\cm^{-1}$')
-# plt.grid()
-plt.show()
-
-""" get zpe """
-
-# Vref_array = Vref_array[500:]  # allow for convergence
-# zpe = np.average(Vref_array)
-# print(Vref_array)
-# print("zpe = " + str(zpe * hartree_conv))
-
+zpe_convergence_plotting()
 
 """ plot Vref convergence """
 
@@ -56,6 +52,40 @@ plt.show()
 # plt.ylabel("$V_{ref}$")
 # plt.grid()
 # plt.show()
+# -----------------------------------
+
+
+def vref_convergence_plotting():
+    plt.figure(figsize=(8, 5))
+    for walks in int_run_walkers:
+        plt.rcParams.update({'font.size': 15})
+        # plt.figure(figsize=(8, 5))
+        for dmc_trial in range(1, 2):
+            v_array_imported = np.load("h2o_analysis_data/" + str(walks) + "_" + str(dmc_trial) + "_varray.npy")
+            # plt.figure(figsize=(8, 5))
+            plt.plot(np.array(v_array_imported) * hartree_conv, label=str(walks) + " walkers")
+            plt.legend()
+            plt.title('$V_{ref}$ convergence with walker variation')
+            plt.xlabel("$\\tau$")
+            plt.ylabel('$V_{ref} (cm^{-1})$')
+            plt.grid()
+
+    plt.savefig(fname="vref_convergence", dpi=500, bbox_inches="tight")
+
+    return None
+
+# vref_convergence_plotting()
+
+
+
+""" get zpe """
+
+# Vref_array = Vref_array[500:]  # allow for convergence
+# zpe = np.average(Vref_array)
+# print(Vref_array)
+# print("zpe = " + str(zpe * hartree_conv))
+
+
 
 
 """walker test"""
@@ -106,23 +136,24 @@ def overlayplots(walk_numbs_list):
             #     expectation_pos2 = np.average(r_oh2, weights=wghts)
             #     dev_2 = np.std(r_oh2)
             # -------------------------------------------------------------
-
+            plt.rcParams.update({'font.size': 16})
             for j in psi_sqrd1s:
                 plt.plot(bin_centers1, j)
             plt.title("$\\psi^2$ projection onto $r_{OH_1}$")
             plt.xlabel("$r_{OH_1} (\\AA)$")
             plt.ylabel("$\\psi^2$")
             plt.grid()
-            plt.savefig(fname=str(num_walkers) + "_run" + str(dmc_trial) + "_wfn1plot")
+            plt.savefig(fname=str(num_walkers) + "_run" + str(dmc_trial) + "_wfn1plot", dpi=500, bbox_inches="tight")
             plt.close()
 
+            plt.rcParams.update({'font.size': 16})
             for k in psi_sqrd2s:
                 plt.plot(bin_centers2, k)
             plt.title("$\\psi^2$ projection onto $r_{OH_2}$")
             plt.xlabel("$r_{OH_2} (\\AA)$")
             plt.ylabel("$\\psi^2$")
             plt.grid()
-            plt.savefig(fname=str(num_walkers) + "_run" + str(dmc_trial) + "_wfn2plot")
+            plt.savefig(fname=str(num_walkers) + "_run" + str(dmc_trial) + "_wfn2plot", dpi=500, bbox_inches="tight")
             plt.close()
 
 
@@ -154,15 +185,19 @@ def combine_wfns_to_one(walk_numbs_list):
             c1_combo = np.array(c) / angst
 
             """ project psi^2 onto OH1 bond """
+            plt.rcParams.update({'font.size': 16})
             r_oh1z = linalg.norm(c1_combo[:, 1] - c1_combo[:, 2], axis=1)
             psi_sqrd1_combo, bins_hist_combo = np.histogram(r_oh1z, bins=25, range=(.5, 1.5), weights=w1_combo, density=True)
             bin_centers_combo = 0.5 * (bins_hist_combo[:-1] + bins_hist_combo[1:])
             plt.plot(bin_centers_combo, psi_sqrd1_combo)
-            plt.title("$\\combining wfns for psi^2 at " + str(num_walkers) + " walkers$")
+            # plt.title("$\combining wfns for psi^2 at 1000 walkers$")
+            plt.title("$\\psi^2$ combined for 1000 walker simulations")
             plt.xlabel("$r_{OH_1} (\\AA)$")
             plt.ylabel("$\\psi^2$")
             plt.grid()
-        plt.savefig(fname=str(num_walkers) + "_5x_wfn1plot")
+        plt.savefig(fname=str(num_walkers) + "_5x_wfn1plot1000", dpi=500, bbox_inches="tight")
         plt.close()
+    return None
+
 
 # combine_wfns_to_one(int_run_walkers)

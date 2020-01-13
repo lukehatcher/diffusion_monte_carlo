@@ -75,6 +75,7 @@ def equilibrium_cds(cds):
     h2o_eq_coords = np.array([[0.9578400, 0.0000000, 0.0000000],
                               [-0.2399535, 0.9272970, 0.0000000],
                               [0.0000000, 0.0000000, 0.0000000]]) / angst * 1.01
+    #np broadcast_to
     for i in range(len(cds)):  # 1000
         cds[i] = h2o_eq_coords
     return cds
@@ -171,42 +172,47 @@ who_from = np.arange(len(coordinates))
 coordinates = equilibrium_cds(coordinates)
 weights_spots2 = np.arange((param.num_tsteps / number_of_wfns), param.num_tsteps + 1, param.num_tsteps/number_of_wfns)
 cds_spots2 = np.arange((param.num_tsteps / number_of_wfns) - param.descendant_time, param.num_tsteps, param.num_tsteps/number_of_wfns)
-wfn_ct = 1
-wt_ct = 1
 
 
 """ call """
 
-for i in range(param.num_tsteps + 1):
-    coordinates = random_displacement(coordinates)
-    V_array = get_potential(coordinates)
-    if i == 0:
+
+def run_call():
+    wfn_ct = 1
+    wt_ct = 1
+    for i in range(param.num_tsteps + 1):
+        coordinates = random_displacement(coordinates)
+        V_array = get_potential(coordinates)
+        if i == 0:
+            Vref = vref_stuff(V_array)
+
+        if i in cds_spots2:
+            print(i)  # visual on run speed
+            print(len(coordinates))  # visual on walker variation
+            coords_to_save = (np.copy(coordinates)) * angst
+            np.save("hello/" + str(param.init_walks) + "_" + str(param.run_numb) + "_" + "wfn" + str(wfn_ct) + ".npy",
+                    coords_to_save * angst)
+            weights = np.zeros(len(coords_to_save))
+            who_from = np.arange(len(coords_to_save))
+            wfn_ct += 1
+        V_array, coordinates, birth_list, death_list, who_from = birth_or_death(V_array, Vref, coordinates, who_from)
+
+        if i in weights_spots2:
+            individuals, occurrence = np.unique(who_from, return_counts=True)
+            weights[individuals] = occurrence
+            np.save("hello/" + str(param.init_walks) + "_" + str(param.run_numb) + "_" + "weights" + str(wt_ct),
+                    weights)
+            wt_ct += 1
+
         Vref = vref_stuff(V_array)
+        Vref_array.append(Vref)
 
-    if i in cds_spots2:
-        print(i)  # visual on run speed
-        print(len(coordinates))  # visual on walker variation
-        coords_to_save = (np.copy(coordinates)) * angst
-        np.save("hello/" + str(param.init_walks) + "_" + str(param.run_numb) + "_" + "wfn" + str(wfn_ct) + ".npy",
-                coords_to_save * angst)
-        weights = np.zeros(len(coords_to_save))
-        who_from = np.arange(len(coords_to_save))
-        wfn_ct += 1
-    V_array, coordinates, birth_list, death_list, who_from = birth_or_death(V_array, Vref, coordinates, who_from)
+        """ save vref """
 
-    if i in weights_spots2:
-        individuals, occurrence = np.unique(who_from, return_counts=True)
-        weights[individuals] = occurrence
-        np.save("hello/" + str(param.init_walks) + "_" + str(param.run_numb) + "_" + "weights" + str(wt_ct),
-                weights)
-        wt_ct += 1
+        if i == param.num_tsteps:
+            np.save("hello/" + str(param.init_walks) + "_" + str(param.run_numb) + "_varray", Vref_array)
+        print("gg")
+    return None
 
-    Vref = vref_stuff(V_array)
-    Vref_array.append(Vref)
-
-    """ save vref """
-
-    if i == param.num_tsteps:
-        np.save("hello/" + str(param.init_walks) + "_" + str(param.run_numb) + "_varray", Vref_array)
-print("gg")
+#run_call()
 

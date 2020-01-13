@@ -1,12 +1,6 @@
 import numpy as np
 import numpy.linalg as la
 import matplotlib.pyplot as plt
-#coordinates are in bohr
-
-# def get_vector(load_walkers):
-#     v1 = load_walkers[:, 10-1] - load_walkers[:, 3-1]
-#     v2 = load_walkers[:, 10-1] - load_walkers[:, 3-1]
-#     return v1, v2
 
 
 def get_vec(load_walkers, atom_n1, atom_n2):
@@ -38,7 +32,8 @@ thetas = get_angle(a, b)
 r_oh = la.norm(a, axis=1) * 0.529177
 # hist_theta(theta, DW, rng=[80, 100])
 
-edges = np.linspace(70, 170, num=11)  # float
+edges = np.linspace(70, 170, num=11)
+max_occupance = 700000
 
 
 for i in range(len(edges)-1):
@@ -47,13 +42,13 @@ for i in range(len(edges)-1):
     print(str(len(index)))
     p, bins = np.histogram(r_oh[index], bins=25, range=[.6, 1.6], density=False, weights=DW[index])  #density needs to change later
     bin_centers = 0.5 * (bins[:-1] + bins[1:])
-#    plt.ylim(0, 20)
-    plt.plot(bin_centers, ((p/700000)+i))
-plt.savefig(fname="wfall_plot")
+    plt.rcParams.update({'font.size': 15})
+    plt.tight_layout()
+    plt.plot(bin_centers, p+i)
+    plt.ylabel("$N_{W}$")
+    plt.yticks([0, 2, 4, 6, 8], [75, 95, 115, 135, 155])
+    plt.plot(bin_centers, (p/max_occupance)+i)
+    plt.xlabel("$R_{OH}(\AA)$")
+    plt.ylabel("$\\theta_{HOH}(^\circ)$")
+plt.savefig(fname="wfall_plot", dpi=500)
 plt.show()
-
-#test for distribution of angles
-#p2, bins2 = np.histogram(thetas, bins=12, range=[70, 170])
-#bin_centers2 = 0.5 * (bins2[:-1] + bins2[1:])
-#plt.plot(bin_centers2, p2)
-#plt.show()
