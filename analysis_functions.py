@@ -24,31 +24,32 @@ def hist_theta(angle, load_DW, bns=25, rng=None):
     return None
 
 
-walkers = np.load("mil_prot_trimer_walks.npy")
-DW = np.load("mil_prot_trimer_dw.npy")
-a = get_vec(walkers, 10, 3)
-b = get_vec(walkers, 9, 3)
-thetas = get_angle(a, b)
-r_oh = la.norm(a, axis=1) * 0.529177
-# hist_theta(theta, DW, rng=[80, 100])
+def wfall_plots():
+    edges = np.linspace(70, 170, num=11)
+    max_occupance = 700000
 
-edges = np.linspace(70, 170, num=11)
-max_occupance = 700000
+    walkers = np.load("mil_prot_trimer_walks.npy")
+    DW = np.load("mil_prot_trimer_dw.npy")
+    a = get_vec(walkers, 10, 3)
+    b = get_vec(walkers, 9, 3)
+    thetas = get_angle(a, b)
+    r_oh = la.norm(a, axis=1) * 0.529177
 
-
-for i in range(len(edges)-1):
-    bools = (thetas > edges[i]) * (thetas < edges[i + 1])
-    index = np.where(bools)[0]
-    print(str(len(index)))
-    p, bins = np.histogram(r_oh[index], bins=25, range=[.6, 1.6], density=False, weights=DW[index])  #density needs to change later
-    bin_centers = 0.5 * (bins[:-1] + bins[1:])
-    plt.rcParams.update({'font.size': 15})
-    plt.tight_layout()
-    plt.plot(bin_centers, p+i)
-    plt.ylabel("$N_{W}$")
-    plt.yticks([0, 2, 4, 6, 8], [75, 95, 115, 135, 155])
-    plt.plot(bin_centers, (p/max_occupance)+i)
-    plt.xlabel("$R_{OH}(\AA)$")
-    plt.ylabel("$\\theta_{HOH}(^\circ)$")
-plt.savefig(fname="wfall_plot", dpi=500)
-plt.show()
+    for i in range(len(edges)-1):
+        bools = (thetas > edges[i]) * (thetas < edges[i + 1])
+        index = np.where(bools)[0]
+        print(str(len(index)))
+        p, bins = np.histogram(r_oh[index], bins=25, range=[.6, 1.6], density=False, weights=DW[index])  #density needs to change later
+        bin_centers = 0.5 * (bins[:-1] + bins[1:])
+        plt.rcParams.update({'font.size': 15})
+        plt.tight_layout()
+        plt.plot(bin_centers, p+i)
+        plt.ylabel("$N_{W}$")
+        plt.yticks([0, 2, 4, 6, 8], [75, 95, 115, 135, 155])
+        plt.plot(bin_centers, (p/max_occupance)+i)
+        plt.xlabel("$R_{OH}(\AA)$")
+        plt.ylabel("$\\theta_{HOH}(^\circ)$")
+    plt.savefig(fname="wfall_plot", dpi=500)
+    plt.show()
+    return None
+#run = wfall_plots
