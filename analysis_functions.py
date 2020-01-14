@@ -53,3 +53,15 @@ def wfall_plots():
     plt.show()
     return None
 #run = wfall_plots
+
+
+def check_plane(ox_1, ox_2, ox_3, load_walkers):
+    oo_1 = load_walkers[:, ox_1 - 1] - load_walkers[:, ox_3 - 1]
+    oo_2 = load_walkers[:, ox_2 - 1] - load_walkers[:, ox_3 - 1]
+    normal_vec_list = np.cross(oo_1, oo_2)
+    print(normal_vec_list)
+    return ox_1, ox_2, ox_3
+
+
+walkers = np.load("protonated_cluster/100_prot_trimer_walks.npy")
+run = check_plane(1, 2, 3, walkers)
