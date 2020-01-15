@@ -63,5 +63,50 @@ def check_plane(ox_1, ox_2, ox_3, load_walkers):
     return ox_1, ox_2, ox_3
 
 
-walkers = np.load("protonated_cluster/100_prot_trimer_walks.npy")
-run = check_plane(1, 2, 3, walkers)
+walkers = np.load("protonated_clusters/100_prot_trimer_walks.npy")
+edges2 = np.linspace(-1, 1, num=9)
+DW = np.load("protonated_clusters/100_prot_trimer_dw.npy")
+
+# run = check_plane(1, 2, 3, walkers)
+
+
+# def o2_plane(ox1, ox3, load_walkers):
+#     oo_vecs = load_walkers[:, ox1 - 1] - load_walkers[:, ox3 - 1]
+#     r_oh = la.norm(a, axis=1) * 0.529177
+#     z_comps = oo_vecs[:, 2]
+#     print(z_comps)
+#     return ox1, ox3
+
+
+def z_of_hydrogen(H_n, load_walkers):
+    hydrogens = load_walkers[:, H_n - 1]
+    z_comps = hydrogens[:, 2] * 0.529177
+    # print(z_comps)
+    return z_comps
+
+
+def plot_z(z_comps):
+    roh_vec = get_vec(walkers, 9, 3)
+    r_oh2 = la.norm(roh_vec, axis=1) * 0.529177
+    for i in range(len(edges2)-1):
+        bools = (z_comps > edges2[i]) * (z_comps < edges2[i + 1])
+        index = np.where(bools)[0]
+        print(str(len(index)))
+        p, bins = np.histogram(r_oh2[index], bins=25, range=[.6, 1.6], density=False, weights=DW[index])
+        bin_centers = 0.5 * (bins[:-1] + bins[1:])
+        plt.rcParams.update({'font.size': 15})
+        plt.tight_layout()
+        # plt.plot(bin_centers, p + i)
+
+        plt.plot(bin_centers, (p/25)+i)
+        plt.yticks([0, 2, 4, 6], [-.875, -.375, .125, .625])
+        plt.xlabel("$R_{OH}(\AA)$")
+        plt.ylabel("$Z_{H}(\AA)$")
+    # plt.savefig(fname="wfall_plot", dpi=500)
+    plt.show()
+    return None
+
+run = z_of_hydrogen(9, walkers)
+run2 = plot_z(run)
+
+
