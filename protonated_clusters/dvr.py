@@ -2,77 +2,20 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 wn = 219474.6
+au = 1822.89
 #kinetic energy
 # h-bar = 1
 # m = 1
 
-def kinetic_energy(dvr_grid):
-    t_matrix = np.zeros((len(dvr_grid), len(dvr_grid)))
-    for i in range(len(dvr_grid)):
-        for j in range(len(dvr_grid)):
-            if i == j:
-                t_matrix[i,j] = (np.pi**2) / (6*(delta_x**2))
-            else:
-                t_matrix[i,j] = ((-1)**(i-j)) / (((i-j)**2)*(delta_x)**2)
-    return t_matrix
-
-#harmonic osc. function / potential
-
-
-def harmonic_oscillator(dvr_grid):
-    w = 3000.0 /wn
-    v_values = 0.5*(w**2)*(np.square(dvr_grid))
-    return v_values
-
-
-def potential_energy(dvr_grid):
-    a = np.loadtxt("filename")
-    v_matrix = np.diag(v_values)
-    return v_matrix
-    #returns diagonal Vmatrix
-
-
-# #define dvr_grid and delta_x
-# mydvr_grid = np.linspace(-100, 100, 1000)
-# delta_x = (mydvr_grid[1] - mydvr_grid[0])
-#
-# #call
-# real_v_matrix = potential_energy(mydvr_grid)
-# real_kin_matrix = kinetic_energy(mydvr_grid)
-#
-# # plt.matshow(real_kin_matrix)
-# # plt.colorbar()
-# # plt.show()
-# #
-# # plt.matshow(real_v_matrix)
-# # plt.colorbar()
-# # plt.show()
-#
-# e, wfns = np.linalg.eigh(real_kin_matrix + real_v_matrix)
-# print(e*wn,wfns)
-# # plt.plot(mydvr_grid,np.diag(real_v_matrix))
-# plt.plot(mydvr_grid,wfns[:,0]**2)
-# plt.show()
-
 eq_h7o3 = np.load("trimer_eq_geom_oo_fixed_2.npy")  # 2 corrected for ordering
-# print(eq_h7o3)
 ox_shifts = np.full(10, .25)  # bohr
 ox_shifts[0] = 0
-
-#############################
-
-hyd_shifts = np.linspace(1.95725269-1, 1.95725269 + 1.25, 101)  # bohr
+hyd_shifts = np.linspace(1.95725269-1, 1.95725269 + 1.25, 101)  # bohr # len = 101
 
 
 def get_oh_distance(eq_h7o3, atom_n1, atom_n2):
     oh_vector = eq_h7o3[atom_n1, :] - eq_h7o3[atom_n2, :]
     return oh_vector
-
-# run = get_oh_distance(eq_h7o3, 3, 0)
-# print(run)
-# [ 1.95725269 -0.03664311 -0.10535852]
-
-# def get_oo_distance(q_h7o3):
 
 
 def get_geometries(eq_h7o3_load, ox_shifts_load, hyd_shifts_load, ox_1, ox_2, hyd_1, hyd_pull1, hyd_pull2):
@@ -83,7 +26,7 @@ def get_geometries(eq_h7o3_load, ox_shifts_load, hyd_shifts_load, ox_1, ox_2, hy
     eq_h7o3_load[hyd_pull2, 0] -= (4 * .25)  # shift ox back
 
     start_array = np.copy(eq_h7o3_load)
-    start_array[hyd_1, 0] = hyd_shifts[0]-(hyd_shifts[1]-hyd_shifts[0])
+    start_array[hyd_1, 0] = hyd_shifts[0]-(hyd_shifts[1]-hyd_shifts[0])  # need to account for this in my dvr as well
     ct = 1
     ox_step_geoms_i = np.copy(start_array)
     for i in ox_shifts_load:
@@ -102,20 +45,10 @@ def get_geometries(eq_h7o3_load, ox_shifts_load, hyd_shifts_load, ox_1, ox_2, hy
         ct += 1
     return geoms
 
+# run = get_geometries(eq_h7o3, ox_shifts, hyd_shifts, 3, 6, 2, 4, 5)
 
-run = get_geometries(eq_h7o3, ox_shifts, hyd_shifts, 3, 6, 2, 4, 5)
 
-# print(run)
-# print(np.shape(run))
-
-# a = np.load("dvr_oo_geoms_shift_1.npy")
-# b = np.load("dvr_oo_geoms_shift_2.npy")
-# c = np.load("dvr_oo_geoms_shift_3.npy")
-# print(a)
-# print(np.shape(a))
-# print(b)
-# print(c)
-
+# ----------------------------------------------------------------------------------------------------------------------
 # def writeXYZ(cds,num):
 #     atms = ['H', 'H', 'H', 'O', 'H', 'H', 'O', 'H', 'H', 'O']
 #     fll = open('scanPots/coord_'+str(num)+'.xyz', 'w+')
@@ -126,8 +59,69 @@ run = get_geometries(eq_h7o3, ox_shifts, hyd_shifts, 3, 6, 2, 4, 5)
 #             fll.write('%s %f %f %f\n' % (atms[k],cdsA[i,k,0],cdsA[i,k,1],cdsA[i,k,2]))
 #         fll.write('\n')
 #     fll.close()
+# ----------------------------------------------------------------------------------------------------------------------
+
+
+def potential_energy(filename):
+    v_vals = np.loadtxt("pots_for_dvr/" + filename)
+    v_mat = np.diag(v_vals)
+    return v_vals, v_mat
+
+
+def get_grid_and_dx(v_vals, hyd_shift_array):
+    mydvr_grid = np.copy(hyd_shift_array)
+    # mydvr_grid = np.linspace(hyd_shift_array[0], hyd_shift_array[-1], len(hyd_shift_array))
+    mydelta_x = hyd_shift_array[1] - hyd_shift_array[0]
+    return mydvr_grid, mydelta_x
+
+
+def kinetic_energy(mydvr_grid, mydelta_x, m):
+    t_matrix = np.zeros((len(mydvr_grid), len(mydvr_grid)))
+    for i in range(len(mydvr_grid)):
+        for j in range(len(mydvr_grid)):
+            if i == j:
+                t_matrix[i,j] = (np.pi**2) / (6*(mydelta_x**2)*m)
+            else:
+                t_matrix[i,j] = ((-1)**(i-j)) / (m*((i-j)**2) * mydelta_x**2)
+    return t_matrix
+
+
+def run_dvr(filename, m1, m2):
+    m1 *= au
+    m2 *= au
+    m = (m1 * m2) / (m1 + m2)
+    v_values, v_matrix = potential_energy(filename)
+    hyd_shifts_corrected = np.insert(hyd_shifts, 0, hyd_shifts[0] - (hyd_shifts[1] - hyd_shifts[0]))  # see note above in get_geoms fwn -> start_array
+    dvr_grid, delta_x = get_grid_and_dx(v_values, hyd_shifts_corrected)
+    kin_matrix = kinetic_energy(dvr_grid, delta_x, m)
+    myenergy, mywfns = np.linalg.eigh(v_matrix + kin_matrix)
+    return myenergy, mywfns, dvr_grid, v_values
 
 
 
+def plot_dvr_wfns(mydvr_grid, mywfns, v_vals):
+    plt.plot(mydvr_grid, mywfns[:, 0])
+    # plt.xlim([1, 2])
+    plt.show()
+    # plt.close()
+    plt.plot(v_vals)
+    plt.show()
+    plt.plot(np.diag(v_vals))
+    plt.show()
+    return None
 
 
+energy, wfns, dvr_grid, v_values = run_dvr("pots2_1", 15.999, 1.00784)
+run = plot_dvr_wfns(dvr_grid, wfns, v_values)
+
+
+# a, b = potential_energy("pots2_1")  # test
+
+
+# # plt.matshow(real_kin_matrix)
+# # plt.colorbar()
+# # plt.show()
+# #
+# # plt.matshow(real_v_matrix)
+# # plt.colorbar()
+# # plt.show()
