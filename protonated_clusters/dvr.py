@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import argparse
 
 wn = 219474.6
 au = 1822.89
@@ -11,6 +12,19 @@ eq_h7o3 = np.load("trimer_eq_geom_oo_fixed_2.npy")  # 2 corrected for ordering
 ox_shifts = np.full(10, .25)  # bohr
 ox_shifts[0] = 0
 hyd_shifts = np.linspace(1.95725269-1, 1.95725269 + 1.25, 101)  # bohr # len = 101
+
+
+# ----------------------------------------------------------------------------------------------------------------------
+parser = argparse.ArgumentParser()
+parser.add_argument(
+    "--dvr_run-number",
+    default=10,
+    type=int,
+    dest='dvr_run_numb'
+)
+param = parser.parse_args()
+#param.dvr_run_numb
+# ----------------------------------------------------------------------------------------------------------------------
 
 
 def get_oh_distance(eq_h7o3, atom_n1, atom_n2):
@@ -64,6 +78,7 @@ def get_geometries(eq_h7o3_load, ox_shifts_load, hyd_shifts_load, ox_1, ox_2, hy
 
 def potential_energy(filename):
     v_vals = np.loadtxt("pots_for_dvr/" + filename)
+    v_vals /= wn
     v_mat = np.diag(v_vals)
     return v_vals, v_mat
 
@@ -79,10 +94,14 @@ def kinetic_energy(mydvr_grid, mydelta_x, m):
     t_matrix = np.zeros((len(mydvr_grid), len(mydvr_grid)))
     for i in range(len(mydvr_grid)):
         for j in range(len(mydvr_grid)):
+            # if i == j:
+            #     t_matrix[i, j] = ((np.pi**2)/3) / (2 * m * (mydelta_x**2))
+            # else:
+            #     t_matrix[i, j] = (2 * (-1) ** (i - j)) / ((2*m* (mydelta_x)**2) * (i-j)**2)
             if i == j:
                 t_matrix[i,j] = (np.pi**2) / (6*(mydelta_x**2)*m)
             else:
-                t_matrix[i,j] = ((-1)**(i-j)) / (m*((i-j)**2) * mydelta_x**2)
+                t_matrix[i, j] = ((-1)**(i-j)) / (m*((i-j)**2) * (mydelta_x**2))
     return t_matrix
 
 
@@ -95,33 +114,19 @@ def run_dvr(filename, m1, m2):
     dvr_grid, delta_x = get_grid_and_dx(v_values, hyd_shifts_corrected)
     kin_matrix = kinetic_energy(dvr_grid, delta_x, m)
     myenergy, mywfns = np.linalg.eigh(v_matrix + kin_matrix)
+    np.save(fname=param.dvr_run_numb, arr=mywfns)
     return myenergy, mywfns, dvr_grid, v_values
 
 
 
 def plot_dvr_wfns(mydvr_grid, mywfns, v_vals):
-    plt.plot(mydvr_grid, mywfns[:, 0])
+    plt.plot(mydvr_grid, mywfns[:, 0]**2)
     # plt.xlim([1, 2])
-    plt.show()
-    # plt.close()
-    plt.plot(v_vals)
-    plt.show()
-    plt.plot(np.diag(v_vals))
-    plt.show()
+    # plt.show()
+    plt.plot(mydvr_grid, v_vals)
+    # plt.show()
     return None
 
 
-energy, wfns, dvr_grid, v_values = run_dvr("pots2_1", 15.999, 1.00784)
+energy, wfns, dvr_grid, v_values = run_dvr("pots2_" + str(param.dvr_run_numb), 15.999, 1.00784)
 run = plot_dvr_wfns(dvr_grid, wfns, v_values)
-
-
-# a, b = potential_energy("pots2_1")  # test
-
-
-# # plt.matshow(real_kin_matrix)
-# # plt.colorbar()
-# # plt.show()
-# #
-# # plt.matshow(real_v_matrix)
-# # plt.colorbar()
-# # plt.show()
