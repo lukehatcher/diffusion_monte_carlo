@@ -4,9 +4,7 @@ import argparse
 
 wn = 219474.6
 au = 1822.89
-#kinetic energy
-# h-bar = 1
-# m = 1
+
 
 eq_h7o3 = np.load("trimer_eq_geom_oo_fixed_2.npy")  # 2 corrected for ordering
 ox_shifts = np.full(10, .25)  # bohr
@@ -94,10 +92,6 @@ def kinetic_energy(mydvr_grid, mydelta_x, m):
     t_matrix = np.zeros((len(mydvr_grid), len(mydvr_grid)))
     for i in range(len(mydvr_grid)):
         for j in range(len(mydvr_grid)):
-            # if i == j:
-            #     t_matrix[i, j] = ((np.pi**2)/3) / (2 * m * (mydelta_x**2))
-            # else:
-            #     t_matrix[i, j] = (2 * (-1) ** (i - j)) / ((2*m* (mydelta_x)**2) * (i-j)**2)
             if i == j:
                 t_matrix[i,j] = (np.pi**2) / (6*(mydelta_x**2)*m)
             else:
