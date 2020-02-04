@@ -1,0 +1,52 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
+
+def calc_exp_vals(n_wfns, h_filename, dirname, filename):
+    pos_x = np.load(h_filename)
+    myexp_val_list = np.zeros(n_wfns)
+    myexp_val_list2 = np.zeros(n_wfns)
+    for i in np.arange(1, n_wfns + 1):
+        foo = np.load(dirname + "/" + filename + "_" + str(i) + ".npy")
+        psi = foo[:, 0]
+        x = pos_x[i - 1]
+        exp_val = psi @ (x * psi)
+        exp_val2 = psi @ ((x**2) * psi)
+        myexp_val_list[i] = np.copy(exp_val)
+        myexp_val_list2[i] = np.copy(exp_val2)
+        return myexp_val_list, myexp_val_list2
+
+
+def stand_dev(myexp_val_list, myexp_val_list2, oo_filename):
+    oo_vals = np.load(oo_filename)
+    print(oo_vals)
+    ct = 0
+    for expval, expval2 in zip(myexp_val_list, myexp_val_list2):
+        sigma = np.sqrt(expval2 - (expval)**2)
+        print(sigma)
+        plt.plot(oo_vals[ct], sigma, "bo")
+        ct += 1
+    plt.show()
+    return None
+
+
+def psi_max(n_wfns, oo_filename, dirname, filename):
+    oo_vals = np.load(oo_filename)
+    for i in np.arange(1, n_wfns + 1):
+        foo = np.load(dirname + "/" + filename + "_" + str(i) + ".npy")
+        psi = foo[:, 0]
+        psi_max = np.amax(psi)
+        plt.plot(oo_vals[i - 1], psi_max)
+    plt.show()
+    return None
+
+
+exp_val_list, exp_val_list2 = calc_exp_vals(10, "h_steps_trimer.npy", "dvr_wfn_data_trimer", "dvrwfns")
+xd = stand_dev(exp_val_list, exp_val_list2, "oo_steps_trimer.npy")
+
+# run = psi_max(10, "h_steps_trimer.npy", "dvr_wfn_data_trimer", "dvrwfns")
+
+
+
+
+
