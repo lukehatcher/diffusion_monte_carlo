@@ -10,6 +10,8 @@ class oop_DMC:
                  eq_coords = []
                  ):
 
+        trash
+
 
 
 
@@ -30,17 +32,3 @@ num_atoms = 3  # H2O
 xyz = 3
 Vref_array = []
 coordinates = np.zeros((param.init_walks, num_atoms, xyz))  # 1000 pairs of 3x(xyz)
-
-
-
-# ex: object = dmc()
-
-
-class Complex:
-    def __init__(self, realpart, imagpart):
-        self.r = realpart
-        self.i = imagpart
-
-x = Complex(3, 4)
-print(x.r, x.i)
-
