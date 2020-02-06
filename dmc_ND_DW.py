@@ -75,7 +75,7 @@ def equilibrium_cds(cds):
     h2o_eq_coords = np.array([[0.9578400, 0.0000000, 0.0000000],
                               [-0.2399535, 0.9272970, 0.0000000],
                               [0.0000000, 0.0000000, 0.0000000]]) / angst * 1.01
-    #np broadcast_to
+
     for i in range(len(cds)):  # 1000
         cds[i] = h2o_eq_coords
     return cds
