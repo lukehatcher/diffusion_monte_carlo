@@ -19,8 +19,6 @@ hyd_shifts = np.linspace(1.95725269-1, 1.95725269 + 1.25, 101)  # bohr # len = 1
 hyd_shifts_to_save = np.copy(hyd_shifts)
 
 
-
-
 def get_oh_distance(eq_h7o3, atom_n1, atom_n2):
     oh_vector = eq_h7o3[atom_n1, :] - eq_h7o3[atom_n2, :]
     return oh_vector
@@ -99,6 +97,9 @@ def potential_energy(filename):
 
 
 def get_grid_and_dx(v_vals, hyd_shift_array):
+    """
+    for main dvr
+    """
     mydvr_grid = np.copy(hyd_shift_array)
     # mydvr_grid = np.linspace(hyd_shift_array[0], hyd_shift_array[-1], len(hyd_shift_array))
     mydelta_x = hyd_shift_array[1] - hyd_shift_array[0]
@@ -106,6 +107,9 @@ def get_grid_and_dx(v_vals, hyd_shift_array):
 
 
 def kinetic_energy(mydvr_grid, mydelta_x, m):
+    """
+    for main dvr
+    """
     t_matrix = np.zeros((len(mydvr_grid), len(mydvr_grid)))
     for i in range(len(mydvr_grid)):
         for j in range(len(mydvr_grid)):
@@ -117,6 +121,17 @@ def kinetic_energy(mydvr_grid, mydelta_x, m):
 
 
 def run_dvr(filename, m1, m2):
+    """
+    for dvr between two atoms
+    :param filename:
+    :type filename: string
+    :param m1: mass of first atom in amu
+    :type m1: int
+    :param m2: mass of second atom in amu
+    :type m2: int
+    :return: myenergy, mywfns, dvr_grid, v_values
+    :rtype:
+    """
     m1 *= au
     m2 *= au
     m = (m1 * m2) / (m1 + m2)
@@ -134,6 +149,17 @@ def run_dvr(filename, m1, m2):
 
 
 def plot_dvr_wfns(mydvr_grid, mywfns, v_vals):
+    """
+
+    :param mydvr_grid:
+    :type mydvr_grid:
+    :param mywfns:
+    :type mywfns:
+    :param v_vals:
+    :type v_vals:
+    :return:
+    :rtype:
+    """
     plt.plot(mydvr_grid, mywfns[:, 0]**2)
     # plt.xlim([1, 2])
     # plt.show()
