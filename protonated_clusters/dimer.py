@@ -83,5 +83,56 @@ a = MyClass(filename="h2o_dimer_gaussian_summary")
 b = a.method(16)
 
 
+class DimerDVR:
+    def __init__(self,
+                 filename_oh,
+                 dvrgrid,
+                 deltax,
+                 mu,
+                 potentials
+                 ):
+
+        self.filename_oh = filename_oh
+        self.dvrgrid = dvrgrid
+        self.deltax = deltax
+        self.mu = mu
+        self.potentials = potentials
+
+    def pot_energy(self):
+        v_matrix = np.diag(self.potentials)  # whats the units on the loaded self.pot?
+        return v_matrix
+
+    @property
+    def deltax_finder(self):
+
+
+    def get_grid_and_dx(self):
+        oh_steps = np.load(self.filename_oh)
+        self.dvrgrid = np.copy(oh_steps)
+        self.deltax = oh_steps[1] - oh_steps[0]
+        return self.dvrgrid, self.deltax
+
+    # updating deltax from def getgrid to def kinetic energy
+
+    def kinetic_energy(self):
+        t_matrix = np.zeros((len(self.dvrgrid), len(self.dvrgrid)))
+        for i in range(len(self.dvrgrid)):
+            for j in range(len(self.dvrgrid)):
+                if i == j:
+                    t_matrix[i, j] = (np.pi ** 2) / (6 * (self.deltax ** 2) * self.mu)
+                else:
+                    t_matrix[i, j] = ((-1) ** (i - j)) / (self.mu * ((i - j) ** 2) * (self.deltax ** 2))
+        return t_matrix
+
+    def run_dvr(self):
+
+
+        return
+
+a = DimerDVR()
+
+
+
+
 
 # if __name__ == '__main__':
