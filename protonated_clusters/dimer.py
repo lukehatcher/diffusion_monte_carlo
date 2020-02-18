@@ -1,12 +1,15 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy import interpolate
+import argparse
 
 
 class MyClass:
     """
     parse txt file copy of Summary of Optimized Potential Surface Scans from gaussian
+    this class is awful
     """
-    # @staticmethod
+
     def __init__(self,
                  filename,
                  ):
@@ -64,17 +67,23 @@ class MyClass:
 # a = MyClass(filename="h2o_dimer_gaussian_summary")
 # b = a.method(16)
 
+parser = argparse.ArgumentParser()
+parser.add_argument(
+    "-n",
+    "--dvr_numb",
+    type=int,
+    default=1,
+    required=True,
+    help="dvr run number"
+)
+param = parser.parse_args()
+
 
 class DVR:
-    def __init__(self,
-                 dvrgrid,
-                 potentials,
-                 mu,
-                 ):
-
+    def __init__(self, dvrgrid, potentials, mu):
         """
         discrete variable representation
-        :param dvrgrid: aka OH steps
+        :param dvrgrid: aka OH steps, UNITS=ATOMIC
         :type dvrgrid: np array
         :param potentials: for a single OO distance thus should have (nsteps) values in it
         :type potentials: np array
@@ -105,23 +114,56 @@ class DVR:
         v_matrix = self.pot_energy()
         kinetic_energy = self.kinetic_energy()
         evals, wfns_vecs = np.linalg.eigh(v_matrix + kinetic_energy)
-        plt.plot(self.dvrgrid, wfns_vecs[:, 0] ** 2)
+        np.save(file="dimer_dvrwfns_" + str(param.dvr_numb), arr=wfns_vecs)  ##############
+
+        """ now plot """
+        plt.plot((self.dvrgrid * 0.529177), wfns_vecs[:, 0] ** 2)  # plotting in angstrom
+        plt.title("$\\Psi^2$")
         plt.show()
-        return None
+
+        return wfns_vecs
+
+
+class Interpolate1D:
+    def __init__(self, x, y, n_points):
+        """
+        interpolate 1D array to desired size
+        :param x: x axis array
+        :type x: numpy array
+        :param y: y axis array
+        :type y: numpy array
+        :param n_points: number of points to interpolate to
+        :type n_points: int
+        """
+
+        self.x = x
+        self.y = y
+        self.n_points = n_points
+
+    def get_interp(self):
+        f = interpolate.interp1d(self.x, self.y, kind="cubic")
+        new_xOH = np.linspace(start=np.amin(self.x), stop=np.amax(self.x), num=self.n_points, endpoint=True)
+        new_yE = f(new_xOH)
+        return new_xOH, new_yE
 
 
 """ standard OH grid for passing """
-grid_list = np.load(file="dimer_r4oh.npy")
-grid_arr = np.asarray(grid_list)
+grid_arr = np.load(file="dimer_r4oh.npy")  # same for all in this case
+grid_arr *= 1.88973  # angst -> bohr: gaussian gives angst, dvr needs bohr
 
 
 """ pots for a single OO distance for passing """
-pots_list = np.load(file="dimer_Es_1.npy")
-pots_arr = np.asarray(pots_list)
+pots_arr = np.load(file="dimer_Es_1.npy")
+pots_arr_last = np.load(file="dimer_Es_16.npy")
+
+interp_ob = Interpolate1D(grid_arr, pots_arr, 2000)
+newx, newy = interp_ob.get_interp()
+
+dvr_ob = DVR(newx, newy, 1728.3085005881399)
+dvr_ob.run_dvr()
 
 
-ob = DVR(grid_arr, pots_arr, 1728.3085005881399)
-ob.run_dvr()
+
 
 
 
