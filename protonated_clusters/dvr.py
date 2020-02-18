@@ -114,7 +114,7 @@ def kinetic_energy(mydvr_grid, mydelta_x, m):
     for i in range(len(mydvr_grid)):
         for j in range(len(mydvr_grid)):
             if i == j:
-                t_matrix[i,j] = (np.pi**2) / (6*(mydelta_x**2)*m)
+                t_matrix[i, j] = (np.pi**2) / (6*(mydelta_x**2)*m)
             else:
                 t_matrix[i, j] = ((-1)**(i-j)) / (m*((i-j)**2) * (mydelta_x**2))
     return t_matrix
