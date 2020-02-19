@@ -4,7 +4,7 @@ from scipy import interpolate
 import argparse
 
 
-class MyClass:
+class ParseGaussian:
     """
     parse txt file copy of Summary of Optimized Potential Surface Scans from gaussian
 
@@ -14,8 +14,9 @@ class MyClass:
     def __init__(self, filename):
 
         self.filename = filename
+        "self.nsteps = nsteps/numbwfns"
 
-    def method(self, n_steps):
+    def do_parsing(self, n_steps):
         with open(self.filename, "r") as gauss_data:
             ar = [line.split() for line in gauss_data]
             e_list = []
@@ -55,17 +56,22 @@ class MyClass:
             b = n_steps
             np.save(arr=new_oh[0:n_steps], file="dimer_r4oh")
 
+            real_oo = np.zeros(n_steps)
             for i in range(1, n_steps + 1):
                 np.save(arr=new_eng[a:b], file="dimer_Es_" + str(i))
-                np.save(arr=new_oo[a:b], file="dimer_r2oo_" + str(i))
+                real_oo[i - 1] = new_oo[(i - 1) * n_steps]
                 a += n_steps
                 b += n_steps
+            np.save(arr=real_oo, file="oo_steps_dimer")
 
         return ar, e_list, r4oh_list, r2oo_list
 
-## call
-# a = MyClass(filename="h2o_dimer_gaussian_summary")
-# b = a.method(16)
+# call
+a = ParseGaussian(filename="h2o_dimer_gaussian_summary")
+a.do_parsing(16)
+
+
+#  ------------------------------------------------------
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -77,6 +83,8 @@ parser.add_argument(
     help="dvr run number"
 )
 param = parser.parse_args()
+#  ------------------------------------------------------
+
 
 
 class DVR:
@@ -191,9 +199,9 @@ def use_dimer_files(numb_files, filenameEs, fname_save_interpE, fname_savewfns):
     return wfn_data
 
 
-run = use_dimer_files(16, "dimer_Es_", "interpd_dimer_E_", "dimer_dvrwfns_")
-
-a = np.load(file="dimer_r2oo_1.npy")
+# run = use_dimer_files(16, "dimer_Es_", "interpd_dimer_E_", "dimer_dvrwfns_")
+#
+# a = np.load(file="dimer_r2oo_1.npy")
 
 
 # if __name__ == '__main__':
