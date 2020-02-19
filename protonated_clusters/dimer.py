@@ -7,12 +7,11 @@ import argparse
 class MyClass:
     """
     parse txt file copy of Summary of Optimized Potential Surface Scans from gaussian
+
     this class is awful
     """
 
-    def __init__(self,
-                 filename,
-                 ):
+    def __init__(self, filename):
 
         self.filename = filename
 
@@ -63,7 +62,7 @@ class MyClass:
 
         return ar, e_list, r4oh_list, r2oo_list
 
-
+## call
 # a = MyClass(filename="h2o_dimer_gaussian_summary")
 # b = a.method(16)
 
@@ -153,14 +152,39 @@ grid_arr *= 1.88973  # angst -> bohr: gaussian gives angst, dvr needs bohr
 
 
 """ pots for a single OO distance for passing """
-pots_arr = np.load(file="dimer_Es_1.npy")
-pots_arr_last = np.load(file="dimer_Es_16.npy")
+# pots_arr = np.load(file="dimer_Es_1.npy")
+# pots_arr_last = np.load(file="dimer_Es_16.npy")
 
-interp_ob = Interpolate1D(grid_arr, pots_arr, 2000)
-newx, newy = interp_ob.get_interp()
+# interp_ob = Interpolate1D(grid_arr, pots_arr, 2000)
+# newx, newy = interp_ob.get_interp()
+#
+# dvr_ob = DVR(newx, newy, 1728.3085005881399)
+# dvr_ob.run_dvr()
 
-dvr_ob = DVR(newx, newy, 1728.3085005881399)
-dvr_ob.run_dvr()
+""" interpolate all 16 of my energies """
+
+
+def interp_my_dimer_files(numb_files, filename):
+    """
+
+    :param numb_files:
+    :type numb_files:
+    :param filename: exclude file extension
+    :type filename: str
+    :return:
+    :rtype:
+    """
+    for i in range(1, numb_files + 1):
+        f = np.load(file=filename + str(i) + ".npy")
+        my_ob = Interpolate1D(grid_arr, f, 2000)
+        new_xOH, new_yE = my_ob.get_interp()
+        np.save(file="interpd_dimer_E_" + str(i), arr=new_yE)
+    return None
+
+
+run = interp_my_dimer_files(16, "dimer_Es_")
+
+
 
 
 
