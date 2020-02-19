@@ -54,6 +54,7 @@ class MyClass:
             a = n_steps - n_steps
             b = n_steps
             np.save(arr=new_oh[0:n_steps], file="dimer_r4oh")
+
             for i in range(1, n_steps + 1):
                 np.save(arr=new_eng[a:b], file="dimer_Es_" + str(i))
                 np.save(arr=new_oo[a:b], file="dimer_r2oo_" + str(i))
@@ -113,12 +114,12 @@ class DVR:
         v_matrix = self.pot_energy()
         kinetic_energy = self.kinetic_energy()
         evals, wfns_vecs = np.linalg.eigh(v_matrix + kinetic_energy)
-        np.save(file="dimer_dvrwfns_" + str(param.dvr_numb), arr=wfns_vecs)  ##############
+        # np.save(file="dimer_dvrwfns_" + str(param.dvr_numb), arr=wfns_vecs)  ##############
 
         """ now plot """
-        plt.plot((self.dvrgrid * 0.529177), wfns_vecs[:, 0] ** 2)  # plotting in angstrom
-        plt.title("$\\Psi^2$")
-        plt.show()
+        # plt.plot((self.dvrgrid * 0.529177), wfns_vecs[:, 0] ** 2)  # plotting in angstrom
+        # plt.title("$\\Psi^2$")
+        # plt.show()
 
         return wfns_vecs
 
@@ -161,34 +162,38 @@ grid_arr *= 1.88973  # angst -> bohr: gaussian gives angst, dvr needs bohr
 # dvr_ob = DVR(newx, newy, 1728.3085005881399)
 # dvr_ob.run_dvr()
 
-""" interpolate all 16 of my energies """
 
-
-def interp_my_dimer_files(numb_files, filename):
+def use_dimer_files(numb_files, filenameEs, fname_save_interpE, fname_savewfns):
     """
-
-    :param numb_files:
-    :type numb_files:
-    :param filename: exclude file extension
-    :type filename: str
-    :return:
-    :rtype:
+    get dvr wfns at all 16 of of OO distances
+    :param numb_files: aka numb of OO distances
+    :type numb_files: int
+    :param filenameEs: name of energy files EXCLUDE EXTENSION
+    :type filenameEs: str
+    :param fname_saveE: name wanted for saving interped Es
+    :type fname_saveE: str
+    :param fname_savewfns: name wanted for saving wfns
+    :type fname_savewfns: str
+    :return: wfn_data:
+    :rtype: numpy array
     """
     for i in range(1, numb_files + 1):
-        f = np.load(file=filename + str(i) + ".npy")
-        my_ob = Interpolate1D(grid_arr, f, 2000)
-        new_xOH, new_yE = my_ob.get_interp()
-        np.save(file="interpd_dimer_E_" + str(i), arr=new_yE)
-    return None
+        f = np.load(file=filenameEs + str(i) + ".npy")
+        interp_ob = Interpolate1D(grid_arr, f, 2000)
+        new_xOH, new_yE = interp_ob.get_interp()
+        np.save(file=fname_save_interpE + str(i), arr=new_yE)
+        np.save(file="xOH", arr=new_xOH)
+
+        dvr_ob = DVR(new_xOH, new_yE, 1728.3085005881399)
+        wfn_data = dvr_ob.run_dvr()
+        np.save(file=fname_savewfns + str(i), arr=wfn_data)
+
+    return wfn_data
 
 
-run = interp_my_dimer_files(16, "dimer_Es_")
+run = use_dimer_files(16, "dimer_Es_", "interpd_dimer_E_", "dimer_dvrwfns_")
 
-
-
-
-
-
+a = np.load(file="dimer_r2oo_1.npy")
 
 
 # if __name__ == '__main__':

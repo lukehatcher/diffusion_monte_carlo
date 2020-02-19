@@ -2,6 +2,55 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
+class ExpValCalculations:
+    def __init__(self, nwfns, hsteps, wfn_data, wfn_fname, xOH_fname):
+        """
+        calc expectation values <O^hat> and <O^Hat**2> for position operator given wfns
+        :param nwfns: number of wave functions
+        :type nwfns: int
+        :param hsteps: file of hydrogen steps
+        :type hsteps: np array
+        :param wfn_data:
+        :type wfn_data:
+        :param wfn_fname: filename of wfn data to use EXCLUDE EXTENSION
+        :type wfn_fname: str
+        :param xOH_fname: filename of oh steps
+        :type xOH_fname: str
+        """
+        self.nwfns = nwfns
+        self.hsteps = hsteps
+        self.wfn_data = wfn_data
+        self.wfn_fname = wfn_fname
+        self.xOH_fname = xOH_fname
+        self.myexp_val_list = np.zeros(self.n_wfns)
+        self.myexp_val_list2 = np.zeros(self.n_wfns)
+
+    def calc_expvals(self):
+        for i in range(1, self.nwfns + 1):
+            wfns = np.load(self.wfn_fname + str(i) + ".npy")  # "dimer_dvrwfns_"
+            psi = wfns[:, 0]
+            x = np.load(self.xOH_fname)
+            exp_val = psi @ (x * psi)
+            exp_val2 = psi @ ((x ** 2) * psi)
+            self.myexp_val_list[i - 1] = np.copy(exp_val)
+            self.myexp_val_list2[i - 1] = np.copy(exp_val2)
+        return self.myexp_val_list, self.myexp_val_list2
+
+    def calc_stand_dev(self):
+        oo_vals = np.load(oo_filename)
+        ct = 0
+        for expval, expval2 in zip(self.myexp_val_list, self.myexp_val_list2):
+            sigma = np.sqrt(expval2 - (expval ** 2))
+            plt.plot(oo_vals[ct], sigma, "bo")
+            ct += 1
+        plt.show()
+
+
+
+
+#  ------------------------------------------------------
+
+
 def calc_exp_vals(n_wfns, h_filename, dirname, filename):
     """
     calc expectation values <O^hat> and <O^Hat**2> for position operator given wfns
@@ -31,10 +80,6 @@ def calc_exp_vals(n_wfns, h_filename, dirname, filename):
         print(myexp_val_list2)
     return myexp_val_list, myexp_val_list2
 
-# foo = np.load("dvr_wfn_data_trimer/dvrwfns_1.npy")
-# print(foo)
-# foo2 = np.load("dvr_wfn_data_trimer/dvrwfns_2.npy")
-# print(foo2)
 
 
 def stand_dev(myexp_val_list, myexp_val_list2, oo_filename):
