@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 
 
 class ExpValCalculations:
-    def __init__(self, nwfns, hsteps, wfn_data, wfn_fname, xOH_fname):
+    def __init__(self, nwfns, hsteps, wfn_data, wfn_fname, xOH_fname, oo_fname):
         """
         calc expectation values <O^hat> and <O^Hat**2> for position operator given wfns
         :param nwfns: number of wave functions
@@ -14,14 +14,17 @@ class ExpValCalculations:
         :type wfn_data:
         :param wfn_fname: filename of wfn data to use EXCLUDE EXTENSION
         :type wfn_fname: str
-        :param xOH_fname: filename of oh steps
+        :param xOH_fname: filename of OH steps
         :type xOH_fname: str
+        :param oo_fname: filename of OO steps
+        :type oo_fname : str
         """
         self.nwfns = nwfns
         self.hsteps = hsteps
         self.wfn_data = wfn_data
         self.wfn_fname = wfn_fname
         self.xOH_fname = xOH_fname
+        self.oo_fname = oo_fname
         self.myexp_val_list = np.zeros(self.n_wfns)
         self.myexp_val_list2 = np.zeros(self.n_wfns)
 
@@ -37,15 +40,14 @@ class ExpValCalculations:
         return self.myexp_val_list, self.myexp_val_list2
 
     def calc_stand_dev(self):
-        oo_vals = np.load(oo_filename)
+        oo_vals = np.load(self.oo_fname)
         ct = 0
         for expval, expval2 in zip(self.myexp_val_list, self.myexp_val_list2):
             sigma = np.sqrt(expval2 - (expval ** 2))
-            plt.plot(oo_vals[ct], sigma, "bo")
+            plt.plot(oo_vals[ct], sigma, "ro")
             ct += 1
+        plt.savefig(fname="test_fig_swag" + str(ct))
         plt.show()
-
-
 
 
 #  ------------------------------------------------------
