@@ -14,7 +14,7 @@ class ParseGaussian:
     def __init__(self, filename):
 
         self.filename = filename
-        "self.nsteps = nsteps/numbwfns"
+        #self.nsteps = nsteps/numbwfns
 
     def do_parsing(self, n_steps):
         with open(self.filename, "r") as gauss_data:
@@ -66,9 +66,10 @@ class ParseGaussian:
 
         return ar, e_list, r4oh_list, r2oo_list
 
-# call
-a = ParseGaussian(filename="h2o_dimer_gaussian_summary")
-a.do_parsing(16)
+
+# call for parsing
+# a = ParseGaussian(filename="h2o_dimer_gaussian_summary")
+# a.do_parsing(16)
 
 
 #  ------------------------------------------------------
@@ -86,14 +87,13 @@ param = parser.parse_args()
 #  ------------------------------------------------------
 
 
-
 class DVR:
     def __init__(self, dvrgrid, potentials, mu):
         """
         discrete variable representation
         :param dvrgrid: aka OH steps, UNITS=ATOMIC
         :type dvrgrid: np array
-        :param potentials: for a single OO distance thus should have (nsteps) values in it
+        :param potentials: Energies for a
         :type potentials: np array
         :param mu: reduced mass, calc by hand prior UNITS=ATOMIC, thus *1822.89 for amu --> au
         :type mu: float
@@ -186,8 +186,8 @@ def use_dimer_files(numb_files, filenameEs, fname_save_interpE, fname_savewfns):
     :rtype: numpy array
     """
     for i in range(1, numb_files + 1):
-        f = np.load(file=filenameEs + str(i) + ".npy")
-        interp_ob = Interpolate1D(grid_arr, f, 2000)
+        engy_file = np.load(file=filenameEs + str(i) + ".npy")
+        interp_ob = Interpolate1D(grid_arr, engy_file, 2000)  # grid_arr is hard coded
         new_xOH, new_yE = interp_ob.get_interp()
         np.save(file=fname_save_interpE + str(i), arr=new_yE)
         np.save(file="xOH", arr=new_xOH)
@@ -197,6 +197,14 @@ def use_dimer_files(numb_files, filenameEs, fname_save_interpE, fname_savewfns):
         np.save(file=fname_savewfns + str(i), arr=wfn_data)
 
     return wfn_data
+
+
+for i in range(1, 17):
+    a = np.load(file="dimer_Es_" + str(i) + ".npy")
+    a *= 219474.63
+    a -= np.amin(a)
+    plt.plot(a)
+plt.show()
 
 
 # run = use_dimer_files(16, "dimer_Es_", "interpd_dimer_E_", "dimer_dvrwfns_")
